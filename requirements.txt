@@ -1,3 +1,2 @@
-tkinter
+flet
 Pillow
-ttkbootstrap
