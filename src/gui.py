@@ -1,8 +1,6 @@
-from tkinter import Tk, Listbox, StringVar, Entry, Label, Button, OptionMenu, IntVar, messagebox, Frame, Scrollbar, END
-from tkinter import ttk
+import flet as ft
+from flet import TextField, Checkbox, ElevatedButton, Text, Row, Column, Dropdown, dropdown, Slider
 from calc import treasures, emissaries, calculate_loot
-
-from tkinter import Toplevel
 
 # --- Preset definitions ---
 PRESETS = {
@@ -37,237 +35,251 @@ PRESETS = {
             ("Gunpowder Barrel", 4),
         ],
         "range": [
-            # 2 Reaper's Bones Chests: Either Reaper’s Chests or Reaper’s Bounties or one of each
             ("Reaper's Chest", 0, 2),
             ("Reaper's Bounty", 0, 2),
-            # 4 random Mermaid Gems
             ("Mermaid Gem", 4, 4),
         ]
     }
 }
 
-# Helper to get treasure object by name (handles Mermaid Gems as a group)
 def get_treasure_by_name(name):
     if name == "Mermaid Gem":
-        # Return all three gem objects
         return [t for t in treasures if "Mermaid Gem" in t.name]
     return [t for t in treasures if t.name == name]
 
-class TreasureCalculatorApp:
-    def __init__(self, master):
-        self.master = master
-        master.title("Treasure Calculator")
+def main(page: ft.Page):
+    page.title = "Sea of Thieves Loot Calculator"
+    page.window_width = 700
+    page.window_height = 500
+    page.window_resizable = False
+    page.window_max_width = 700
+    page.window_max_height = 500
+    page.window_min_width = 700
+    page.window_min_height = 500
+    page.vertical_alignment = ft.MainAxisAlignment.CENTER
+    page.theme_mode = ft.ThemeMode.DARK
 
-        self.selected_treasures = {}
-        self.emissary_level = IntVar(value=1)
-        self.selected_emissary = StringVar(value=emissaries[0].name)
+    # Stato
+    onboard_counts = {}
+    filtered_treasures = treasures.copy()
+    selected_emissary = ft.Ref[ft.Dropdown]()
+    selected_level = ft.Ref[ft.Slider]()
+    gold_rush = ft.Ref[ft.Checkbox]()
+    gold_and_glory = ft.Ref[ft.Checkbox]()
+    result_text = ft.Ref[ft.Text]()
+    preset_dropdown = ft.Ref[ft.Dropdown]()
 
-        # Event multipliers
-        self.gold_rush_active = IntVar(value=0)
-        self.gold_and_glory_active = IntVar(value=0)
+    # Funzione per aggiornare la colonna onboard
+    def update_onboard():
+        onboard.controls.clear()
+        for name, qty in onboard_counts.items():
+            onboard.controls.append(
+                Row([
+                    Text(f"{name} x{qty}", width=180),
+                    ElevatedButton("-", width=24, height=24, on_click=lambda e, n=name: change_qty(n, -1)),
+                    ElevatedButton("+", width=24, height=24, on_click=lambda e, n=name: change_qty(n, 1)),
+                ])
+            )
+        validate()
+        page.update()
 
-        self.create_widgets()
+    # Funzione per cambiare la quantità
+    def change_qty(name, delta):
+        if name in onboard_counts:
+            onboard_counts[name] += delta
+            if onboard_counts[name] <= 0:
+                del onboard_counts[name]
+        update_onboard()
 
-    def create_widgets(self):
-        main_frame = Frame(self.master)
-        main_frame.pack(padx=10, pady=10)
+    # Funzione per aggiungere un oggetto
+    def add_to_onboard(name):
+        if name in onboard_counts:
+            onboard_counts[name] += 1
+        else:
+            onboard_counts[name] = 1
+        update_onboard()
 
-        # Preset selection
-        preset_frame = Frame(main_frame)
-        preset_frame.grid(row=0, column=0, columnspan=2, sticky="ew", pady=(0, 10))
-        Label(preset_frame, text="Presets:").pack(side="left")
-        self.preset_var = StringVar(value="")
-        self.preset_menu = OptionMenu(preset_frame, self.preset_var, *PRESETS.keys())
-        self.preset_menu.pack(side="left", padx=(5, 0))
-        Button(preset_frame, text="Add Preset", command=self.add_preset).pack(side="left", padx=(5, 0))
-        Button(preset_frame, text="Add Preset x2", command=lambda: self.add_preset(multiplier=2)).pack(side="left", padx=(5, 0))
+    # Funzione per filtrare la lista tesori
+    def update_treasure_list(e=None):
+        search = text_search.value.lower()
+        treasures_col.controls.clear()
+        for t in treasures:
+            if search in t.name.lower():
+                treasures_col.controls.append(
+                    ElevatedButton(
+                        t.name,
+                        on_click=lambda e, n=t.name: add_to_onboard(n),
+                        width=250,
+                        height=32
+                    )
+                )
+        page.update()
 
-        # Left: Search and treasure list
-        left_frame = Frame(main_frame)
-        left_frame.grid(row=1, column=0, sticky="n")
+    # Funzione per validare il bottone Calculate
+    def validate(e=None):
+        button_submit.disabled = len(onboard_counts) == 0
+        page.update()
 
-        Label(left_frame, text="Search Treasures:").pack(anchor="w")
+    # Funzione per calcolare il loot
+    def submit(e=None):
+        treasure_dict = {t.name: t for t in treasures}
+        treasure_counts = {}
+        for name, qty in onboard_counts.items():
+            if name in treasure_dict:
+                treasure_counts[treasure_dict[name]] = qty
+        em = selected_emissary.current.value
+        lvl = int(selected_level.current.value)
+        min_gain, max_gain = calculate_loot(treasure_counts, em, lvl)
+        multiplier = 1.0
+        if gold_rush.current.value:
+            multiplier += 0.5
+        if gold_and_glory.current.value:
+            multiplier += 1.0
+        min_gain *= multiplier
+        max_gain *= multiplier
+        result_text.current.value = f"Min Gain: {int(min_gain)} gold, Max Gain: {int(max_gain)} gold"
+        page.update()
 
-        self.search_var = StringVar()
-        self.search_var.trace("w", self.update_treasure_list)
-        self.search_entry = Entry(left_frame, textvariable=self.search_var, width=40)
-        self.search_entry.pack(anchor="w", pady=(0, 5))
-
-        treasure_list_frame = Frame(left_frame)
-        treasure_list_frame.pack()
-
-        self.treasure_listbox = Listbox(treasure_list_frame, selectmode="multiple", width=40, height=20)
-        self.treasure_listbox.pack(side="left", fill="y")
-
-        scrollbar = Scrollbar(treasure_list_frame, orient="vertical", command=self.treasure_listbox.yview)
-        scrollbar.pack(side="right", fill="y")
-        self.treasure_listbox.config(yscrollcommand=scrollbar.set)
-
-        self.populate_treasure_list()
-
-        add_button = Button(left_frame, text="Add Selected →", command=self.add_selected_treasures)
-        add_button.pack(pady=(5, 0))
-
-        # Right: Selected treasures and controls
-        right_frame = Frame(main_frame)
-        right_frame.grid(row=1, column=1, padx=(20, 0), sticky="n")
-
-        Label(right_frame, text="Selected Treasures:").pack(anchor="w")
-
-        # Pulsante per cancellare tutti i tesori aggiunti
-        Button(right_frame, text="Clear All", command=self.clear_selected_treasures, fg="red").pack(anchor="w", pady=(0, 5))
-
-        self.selected_list_frame = Frame(right_frame)
-        self.selected_list_frame.pack()
-
-        self.update_selected_treasures_view()
-
-        # Emissary and level
-        Label(right_frame, text="Select Emissary:").pack(anchor="w", pady=(10, 0))
-        self.emissary_menu = OptionMenu(right_frame, self.selected_emissary, *[e.name for e in emissaries])
-        self.emissary_menu.pack(anchor="w")
-
-        Label(right_frame, text="Emissary Level:").pack(anchor="w", pady=(10, 0))
-        self.level_spinbox = ttk.Spinbox(right_frame, from_=1, to=5, textvariable=self.emissary_level, width=5)
-        self.level_spinbox.pack(anchor="w")
-
-        # Event multipliers (spostati qui sotto Emissary Level)
-        Label(right_frame, text="Event Multipliers:").pack(anchor="w", pady=(10, 0))
-        self.gold_rush_check = ttk.Checkbutton(right_frame, text="Gold Rush x1.5", variable=self.gold_rush_active)
-        self.gold_rush_check.pack(anchor="w")
-        self.gold_and_glory_check = ttk.Checkbutton(right_frame, text="Gold & Glory x2", variable=self.gold_and_glory_active)
-        self.gold_and_glory_check.pack(anchor="w")
-
-        self.calculate_button = Button(right_frame, text="Calculate Loot", command=self.calculate_loot)
-        self.calculate_button.pack(pady=(10, 0), anchor="w")
-
-        self.result_label = Label(right_frame, text="", font=("Arial", 12, "bold"))
-        self.result_label.pack(anchor="w", pady=(10, 0))
-
-    def populate_treasure_list(self):
-        self.treasure_listbox.delete(0, END)
-        for treasure in treasures:
-            self.treasure_listbox.insert(END, treasure.name)
-
-    def update_treasure_list(self, *args):
-        search_term = self.search_var.get().lower()
-        self.treasure_listbox.delete(0, END)
-        for treasure in treasures:
-            if search_term in treasure.name.lower():
-                self.treasure_listbox.insert(END, treasure.name)
-
-    def add_selected_treasures(self):
-        selected_indices = self.treasure_listbox.curselection()
-        for idx in selected_indices:
-            # Find the actual treasure object by name (since list may be filtered)
-            name = self.treasure_listbox.get(idx)
-            treasure = next((t for t in treasures if t.name == name), None)
-            if treasure:
-                self.selected_treasures[treasure] = self.selected_treasures.get(treasure, 0) + 1
-        self.update_selected_treasures_view()
-
-    def update_selected_treasures_view(self):
-        # Clear previous widgets
-        for widget in self.selected_list_frame.winfo_children():
-            widget.destroy()
-        if not self.selected_treasures:
-            Label(self.selected_list_frame, text="No treasures selected.").pack()
-            return
-        for treasure, count in self.selected_treasures.items():
-            row = Frame(self.selected_list_frame)
-            row.pack(fill="x", pady=2)
-            Label(row, text=treasure.name, width=30, anchor="w").pack(side="left")
-            Button(row, text="-", width=2, command=lambda t=treasure: self.change_treasure_count(t, -1)).pack(side="left")
-            Label(row, text=f"x{count}", width=4).pack(side="left")
-            Button(row, text="+", width=2, command=lambda t=treasure: self.change_treasure_count(t, 1)).pack(side="left")
-
-    def change_treasure_count(self, treasure, delta):
-        if treasure in self.selected_treasures:
-            self.selected_treasures[treasure] += delta
-            if self.selected_treasures[treasure] <= 0:
-                del self.selected_treasures[treasure]
-        self.update_selected_treasures_view()
-
-    def add_preset(self, multiplier=1):
-        preset_name = self.preset_var.get()
+    # Funzione per aggiungere preset
+    def add_preset(e=None, multiplier=1):
+        preset_name = preset_dropdown.current.value
         if not preset_name or preset_name not in PRESETS:
-            messagebox.showwarning("Preset", "Please select a preset.")
             return
         preset = PRESETS[preset_name]
         # Add fixed treasures
         for name, qty in preset.get("fixed", []):
             treasures_found = get_treasure_by_name(name)
             for t in treasures_found:
-                self.selected_treasures[t] = self.selected_treasures.get(t, 0) + qty * multiplier
-        # Add ranged treasures (min/max logic)
+                if t.name in onboard_counts:
+                    onboard_counts[t.name] += qty * multiplier
+                else:
+                    onboard_counts[t.name] = qty * multiplier
+        # Add ranged treasures (min logic)
         for name, min_qty, max_qty in preset.get("range", []):
             treasures_found = get_treasure_by_name(name)
-            # For Mermaid Gems, distribute for min/max calculation
             if name == "Mermaid Gem":
-                # For min: add 1 (or 4) Sapphire (all same value), for max: add 5 Ruby (all same value)
-                # Here, add the minimum number of the lowest value gem, and the maximum number of the highest value gem
-                # For selection, add the average (rounded down) of the range as Sapphire
                 for t in treasures_found:
                     if t.name == "Sapphire Mermaid Gem":
-                        self.selected_treasures[t] = self.selected_treasures.get(t, 0) + min_qty * multiplier
+                        if t.name in onboard_counts:
+                            onboard_counts[t.name] += min_qty * multiplier
+                        else:
+                            onboard_counts[t.name] = min_qty * multiplier
             else:
-                # For selection, add the minimum quantity (user can adjust after)
                 for t in treasures_found:
-                    self.selected_treasures[t] = self.selected_treasures.get(t, 0) + min_qty * multiplier
-        self.update_selected_treasures_view()
+                    if t.name in onboard_counts:
+                        onboard_counts[t.name] += min_qty * multiplier
+                    else:
+                        onboard_counts[t.name] = min_qty * multiplier
+        update_onboard()
 
-    def calculate_loot(self):
-        if not self.selected_treasures:
-            messagebox.showwarning("Selection Error", "Please select at least one treasure.")
-            return
+    # Funzione per resettare gli onboard treasures
+    def clear_onboard(e=None):
+        onboard_counts.clear()
+        update_onboard()
 
-        # --- Custom min/max logic for presets with randoms ---
-        treasure_counts_min = self.selected_treasures.copy()
-        treasure_counts_max = self.selected_treasures.copy()
+    # --- UI ELEMENTS ---
+    text_search = TextField(label='Search', text_align=ft.TextAlign.LEFT, width=250, on_change=update_treasure_list)
+    button_submit = ElevatedButton(
+        text='Calculate', width=120, disabled=True, on_click=submit, expand=True
+    )
 
-        # Fort of Fortune's Vault: Mermaid Gems 1-5, use Sapphire for min, Ruby for max
-        if self.preset_var.get() == "Fort of Fortune's Vault":
-            for t in treasures:
-                if t.name == "Sapphire Mermaid Gem":
-                    treasure_counts_min[t] = treasure_counts_min.get(t, 0) + 1
-                if t.name == "Ruby Mermaid Gem":
-                    treasure_counts_max[t] = treasure_counts_max.get(t, 0) + 5
+    # Preset dropdown
+    preset_dropdown_ctrl = Dropdown(
+        ref=preset_dropdown,
+        label="Presets",
+        width=250,
+        value=None,
+        options=[dropdown.Option(k) for k in PRESETS.keys()],
+    )
+    button_add_preset = ElevatedButton(text="Add Preset", width=120, on_click=add_preset)
+    button_add_preset2 = ElevatedButton(text="Add Preset x2", width=120, on_click=lambda e: add_preset(e, multiplier=2))
 
-        # Fort of the Damned's Vault: 4 random gems, use Sapphire for min, Ruby for max
-        if self.preset_var.get() == "Fort of the Damned's Vault":
-            for t in treasures:
-                if t.name == "Sapphire Mermaid Gem":
-                    treasure_counts_min[t] = treasure_counts_min.get(t, 0) + 4
-                if t.name == "Ruby Mermaid Gem":
-                    treasure_counts_max[t] = treasure_counts_max.get(t, 0) + 4
+    button_clear_onboard = ElevatedButton(
+        text="Clear Onboard", width=120, on_click=clear_onboard, bgcolor=ft.Colors.RED_400, color=ft.Colors.WHITE, expand=True
+    )
 
-        min_gain, _ = calculate_loot(
-            treasure_counts_min, self.selected_emissary.get(), self.emissary_level.get()
+    # Emissary dropdown
+    emissary_dropdown = Dropdown(
+        ref=selected_emissary,
+        label="Emissary",
+        width=250,
+        value=emissaries[0].name,
+        options=[dropdown.Option(e.name) for e in emissaries],
+        on_change=validate
+    )
+
+    # Emissary level slider
+    level_slider = Slider(
+        ref=selected_level,
+        min=1,
+        max=5,
+        divisions=4,
+        value=1,
+        label="{value}",
+        width=250,
+        on_change=validate
+    )
+
+    # Event checkboxes
+    gold_rush_checkbox = Checkbox(ref=gold_rush, label="Gold Rush x1.5", value=False, on_change=submit)
+    gold_and_glory_checkbox = Checkbox(ref=gold_and_glory, label="Gold & Glory x2", value=False, on_change=submit)
+
+    # Colonna tesori filtrabili
+    treasures_col = Column(
+        [],
+        width=270,
+        height=200,
+        scroll="auto"
+    )
+
+    # Colonna tesori aggiunti
+    onboard = Column(
+        [],
+        width=270,
+        height=200,
+        scroll="auto"
+    )
+
+    # Risultato
+    result = Text(ref=result_text, value="", size=16, weight="bold")
+
+    # Inizializza lista tesori
+    update_treasure_list()
+
+    # Layout
+    page.add(
+        Row(
+            controls=[
+                Column(
+                    [
+                        text_search,
+                        Text("All Treasures:"),
+                        treasures_col,
+                        emissary_dropdown,
+                        level_slider,
+                        gold_rush_checkbox,
+                        gold_and_glory_checkbox
+                    ],
+                    width=300
+                ),
+                Column(
+                    [
+                        preset_dropdown_ctrl,
+                        Row([button_add_preset, button_add_preset2]),
+                        Text("Onboard Treasures:"),
+                        onboard,
+                        Row([
+                            button_submit,
+                            button_clear_onboard
+                        ], expand=True),
+                        result
+                    ],
+                    width=280
+                ),
+            ],
+            alignment=ft.MainAxisAlignment.START
         )
-        _, max_gain = calculate_loot(
-            treasure_counts_max, self.selected_emissary.get(), self.emissary_level.get()
-        )
+    )
 
-        # Event multipliers
-        multiplier = 1.0
-        if self.gold_rush_active.get():
-            multiplier += 0.5
-        if self.gold_and_glory_active.get():
-            multiplier += 1.0
-
-        min_gain *= multiplier
-        max_gain *= multiplier
-
-        self.result_label.config(
-            text=f"Min Gain: {int(min_gain)} gold, Max Gain: {int(max_gain)} gold"
-        )
-
-    def clear_selected_treasures(self):
-        self.selected_treasures.clear()
-        self.update_selected_treasures_view()
-        self.result_label.config(text="")
-
-if __name__ == "__main__":
-    root = Tk()
-    app = TreasureCalculatorApp(root)
-    root.mainloop()
+if __name__ == '__main__':
+    ft.app(target=main)
