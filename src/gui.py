@@ -62,6 +62,10 @@ class TreasureCalculatorApp:
         self.emissary_level = IntVar(value=1)
         self.selected_emissary = StringVar(value=emissaries[0].name)
 
+        # Event multipliers
+        self.gold_rush_active = IntVar(value=0)
+        self.gold_and_glory_active = IntVar(value=0)
+
         self.create_widgets()
 
     def create_widgets(self):
@@ -126,6 +130,13 @@ class TreasureCalculatorApp:
         Label(right_frame, text="Emissary Level:").pack(anchor="w", pady=(10, 0))
         self.level_spinbox = ttk.Spinbox(right_frame, from_=1, to=5, textvariable=self.emissary_level, width=5)
         self.level_spinbox.pack(anchor="w")
+
+        # Event multipliers (spostati qui sotto Emissary Level)
+        Label(right_frame, text="Event Multipliers:").pack(anchor="w", pady=(10, 0))
+        self.gold_rush_check = ttk.Checkbutton(right_frame, text="Gold Rush x1.5", variable=self.gold_rush_active)
+        self.gold_rush_check.pack(anchor="w")
+        self.gold_and_glory_check = ttk.Checkbutton(right_frame, text="Gold & Glory x2", variable=self.gold_and_glory_active)
+        self.gold_and_glory_check.pack(anchor="w")
 
         self.calculate_button = Button(right_frame, text="Calculate Loot", command=self.calculate_loot)
         self.calculate_button.pack(pady=(10, 0), anchor="w")
@@ -211,7 +222,6 @@ class TreasureCalculatorApp:
             return
 
         # --- Custom min/max logic for presets with randoms ---
-        # Copy selected_treasures for min/max calculation
         treasure_counts_min = self.selected_treasures.copy()
         treasure_counts_max = self.selected_treasures.copy()
 
@@ -231,14 +241,25 @@ class TreasureCalculatorApp:
                 if t.name == "Ruby Mermaid Gem":
                     treasure_counts_max[t] = treasure_counts_max.get(t, 0) + 4
 
-        min_gain, max_gain = calculate_loot(
+        min_gain, _ = calculate_loot(
             treasure_counts_min, self.selected_emissary.get(), self.emissary_level.get()
         )
-        max_gain, max_gain2 = calculate_loot(
+        _, max_gain = calculate_loot(
             treasure_counts_max, self.selected_emissary.get(), self.emissary_level.get()
         )
+
+        # Event multipliers
+        multiplier = 1.0
+        if self.gold_rush_active.get():
+            multiplier += 0.5
+        if self.gold_and_glory_active.get():
+            multiplier += 1.0
+
+        min_gain *= multiplier
+        max_gain *= multiplier
+
         self.result_label.config(
-            text=f"Min Gain: {int(min_gain)} gold, Max Gain: {int(max_gain2)} gold"
+            text=f"Min Gain: {int(min_gain)} gold, Max Gain: {int(max_gain)} gold"
         )
 
     def clear_selected_treasures(self):
