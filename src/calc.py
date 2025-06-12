@@ -4,14 +4,13 @@ class Treasure:
         self.name = name
         self.min_value = min_value
         self.max_value = max_value
-        self.emissaries = emissaries  # Lista di emissari applicabili
+        self.emissaries = emissaries
 
 class Emissary:
     def __init__(self, name, bonus_per_level):
         self.name = name
-        self.bonus_per_level = bonus_per_level  # Dizionario: livello -> bonus %
+        self.bonus_per_level = bonus_per_level
 
-# Esempio di emissari e bonus per livello
 emissaries = [
     Emissary("Gold Hoarders", {1: 0, 2: 0.33, 3: 0.67, 4: 1.0, 5: 1.5}),
     Emissary("Order of Souls", {1: 0, 2: 0.33, 3: 0.67, 4: 1.0, 5: 1.5}),
@@ -19,10 +18,8 @@ emissaries = [
     Emissary("Reaper's Bones", {1: 0, 2: 0.33, 3: 0.67, 4: 1.0, 5: 1.5}),
     Emissary("Athena's Fortune", {1: 0, 2: 0.33, 3: 0.67, 4: 1.0, 5: 1.5}),
     Emissary("Hunter's Call", {1: 0, 2: 0.33, 3: 0.67, 4: 1.0, 5: 1.5}),
-    # Aggiungi altri emissari se necessario
 ]
 
-# Esempio di tesori (puoi aggiungere altri oggetti qui)
 treasures = [
     # GOLD HOARDERS - BIG
 
@@ -171,12 +168,28 @@ treasures = [
     # SPECIAL
     Treasure(88, "Reaper's Chest", 10000, 25000, ["Reaper's Bones"]),
     Treasure(89, "Reaper's Bounty", 25000, 25000, ["Reaper's Bones"]),
-    Treasure(90, "Generous Gift", 5000, 10000, ["Reaper's Bones"]),
+    Treasure(90, "Cannon of Rage", 250, 250, ["Reaper's Bones"]),
 
     # MERMAID GEMS (VALGONO PER TUTTE LE FAZIONI PRINCIPALI)
     Treasure(91, "Sapphire Mermaid Gem", 1000, 1000, ["Gold Hoarders", "Merchant Alliance", "Order of Souls", "Hunter's Call"]),
     Treasure(92, "Emerald Mermaid Gem", 1000, 1000, ["Gold Hoarders", "Merchant Alliance", "Order of Souls", "Hunter's Call"]),
     Treasure(93, "Ruby Mermaid Gem", 1000, 1000, ["Gold Hoarders", "Merchant Alliance", "Order of Souls", "Hunter's Call"]),
+
+    # REAPER'S BONES - FLAGS (valore base, emissary value ignorato)
+    Treasure(94, "Broken Emissary Flag Grade X (Yours)", 1, 1, ["Reaper's Bones"]),
+    Treasure(95, "Broken Emissary Flag (Grade I)", 1600, 2300, ["Reaper's Bones"]),
+    Treasure(96, "Broken Emissary Flag (Grade II)", 3500, 4900, ["Reaper's Bones"]),
+    Treasure(97, "Broken Emissary Flag (Grade III)", 5500, 6500, ["Reaper's Bones"]),
+    Treasure(98, "Broken Emissary Flag (Grade IV)", 7600, 8500, ["Reaper's Bones"]),
+    Treasure(99, "Broken Emissary Flag (Grade V)", 9500, 10500, ["Reaper's Bones"]),
+
+    # REAPER'S BONES - NUOVE CASSE E OGGETTI MISSIONE
+    Treasure(100, "Casket of Gilded Bones", 5500, 6000, ["Reaper's Bones"]),
+    Treasure(101, "Casket of Shadowed Bones", 5000, 5500, ["Reaper's Bones"]),
+    Treasure(102, "Casket of Verdant Bones", 4500, 5000, ["Reaper's Bones"]),
+    Treasure(103, "Casket of Mottled Bones", 4000, 4500, ["Reaper's Bones"]),
+    Treasure(104, "Reaper Master's Urn", 5500, 6000, ["Reaper's Bones"]),
+    Treasure(105, "Skull of the Banished", 12500, 12500, ["Reaper's Bones"]),
 ]
 
 def calculate_loot(treasure_counts, selected_emissary, emissary_level):
