@@ -1,8 +1,10 @@
 # Sea of Thieves Treasure Calculator GUI
 
-This project is a graphical user interface (GUI) application for calculating treasure gains in the game Sea of Thieves. It allows users to interact with existing treasure calculation logic, select emissaries, set emissary levels, and view potential gold gains based on collected treasures.
+This project is a GUI application for calculating treasure gains in *Sea of Thieves*. It allows players to interactively select emissaries, set levels, choose treasures, and view estimated gold gains using official multipliers.
 
-## Project Structure
+---
+
+## 🧭 Project Structure
 
 ```
 sotcalc-gui
@@ -14,34 +16,56 @@ sotcalc-gui
 └── README.md           # Documentation for the project
 ```
 
-## Features
+## ✨ Features
 
-- **Searchable Treasure List**: Users can search for treasures in real-time as they type.
-- **Emissary Selection**: Users can select an emissary from a dropdown list.
-- **Emissary Level Setting**: Users can set the emissary level to calculate potential gains.
-- **Real-time Calculation**: The application updates the minimum and maximum gold gain as users interact with the inputs.
+- **Searchable Treasure List**: Search dynamically as you type.
+- **Emissary Selection**: Choose from available emissaries.
+- **Level Selector**: Set your emissary level (1 to 5).
+- **Gold Multipliers**: Supports Gold Rush and Gold & Glory bonuses.
+- **Preset Support**: Load predefined loot from Fort of the Damned or Fort of Fortune.
+- **Real-Time Calculations**: Get instant gold gain estimates (min and max values).
 
-## Requirements
+---
 
-To run this project, you need to install the required dependencies. You can do this by running:
+## ⚙️ How to Run
 
-```
+### 🔸 Option 1: Download the pre-built `.exe` (recommended for Windows users)
+
+You can download a ready-to-use `.exe` file from the [Releases](https://github.com/DrPurpleNova/SOT-Loot/releases) page.
+
+**Steps:**
+1. Go to the [Releases](https://github.com/DrPurpleNova/SOT-Loot/releases).
+2. Download the latest `.zip` or `.exe` file (e.g., `SOTCalc.exe`).
+3. Extract it (if zipped).
+4. Double-click on the `.exe` file to launch the app — **no Python installation needed**.
+
+> ⚠️ Some browsers or Windows SmartScreen may warn you about unknown executables. You can usually click **"More info" → "Run anyway"** if you trust the source.
+
+---
+
+### 🔸 Option 2: Run from source (requires Python)
+
+Make sure you have Python 3.8 or newer installed. Then install dependencies and run the app:
+
+```bash
 pip install -r requirements.txt
-```
-
-## Running the Application
-
-To start the application, run the following command in your terminal:
-
-```
 python src/gui.py
 ```
 
-Make sure you have Python installed on your system. The application will open a window where you can interact with the treasure calculation features.
+
+## 📦 Requirements
+
+If you're running the app from source, install the required Python packages:
+
+```
+flet
+```
+
+These are listed in the `requirements.txt` file.
 
 ## Contributing
 
-If you would like to contribute to this project, feel free to fork the repository and submit a pull request. Any improvements or bug fixes are welcome!
+Feel free to fork this repository and submit a pull request. Contributions, improvements, and bug fixes are always welcome!
 
 ## License
 
