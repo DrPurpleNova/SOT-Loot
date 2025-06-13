@@ -1,5 +1,13 @@
 import flet as ft
 from flet import TextField, Checkbox, ElevatedButton, Text, Row, Column, Dropdown, dropdown, Slider
+import os
+import sys
+from functools import partial
+
+# Aggiunge la cartella src al path di ricerca dei moduli
+sys.path.append(os.path.dirname(__file__))
+
+import calc
 from calc import treasures, emissaries, calculate_loot
 
 # --- Preset definitions ---
@@ -61,15 +69,17 @@ def main(page: ft.Page):
 
     # Stato
     onboard_counts = {}
-    filtered_treasures = treasures.copy()
     selected_emissary = ft.Ref[ft.Dropdown]()
     selected_level = ft.Ref[ft.Slider]()
     gold_rush = ft.Ref[ft.Checkbox]()
     gold_and_glory = ft.Ref[ft.Checkbox]()
     result_text = ft.Ref[ft.Text]()
     preset_dropdown = ft.Ref[ft.Dropdown]()
+    button_submit = ft.Ref[ft.ElevatedButton]()
 
-    # Funzione per aggiornare la colonna onboard
+    treasures_col = Column([], width=270, height=200, scroll="auto")
+    onboard = Column([], width=270, height=200, scroll="auto")
+
     def update_onboard():
         onboard.controls.clear()
         for name, qty in onboard_counts.items():
@@ -81,9 +91,8 @@ def main(page: ft.Page):
                 ])
             )
         validate()
-        page.update()
+        onboard.update()
 
-    # Funzione per cambiare la quantità
     def change_qty(name, delta):
         if name in onboard_counts:
             onboard_counts[name] += delta
@@ -91,16 +100,14 @@ def main(page: ft.Page):
                 del onboard_counts[name]
         update_onboard()
 
-    # Funzione per aggiungere un oggetto
-    def add_to_onboard(name):
+    def add_to_onboard(name, e):
         if name in onboard_counts:
             onboard_counts[name] += 1
         else:
             onboard_counts[name] = 1
         update_onboard()
 
-    # Funzione per filtrare la lista tesori
-    def update_treasure_list(e=None):
+    def update_treasure_list():
         search = text_search.value.lower()
         treasures_col.controls.clear()
         for t in treasures:
@@ -108,19 +115,27 @@ def main(page: ft.Page):
                 treasures_col.controls.append(
                     ElevatedButton(
                         t.name,
-                        on_click=lambda e, n=t.name: add_to_onboard(n),
+                        on_click=partial(add_to_onboard, t.name),
                         width=250,
                         height=32
                     )
                 )
-        page.update()
+        treasures_col.update()
 
-    # Funzione per validare il bottone Calculate
+    def on_search_change(e):
+        update_treasure_list()
+
+    text_search = TextField(
+                label='Search',
+                text_align=ft.TextAlign.LEFT,
+                width=250,
+                on_submit=on_search_change  # <- usa Invio per cercare
+                )
+
     def validate(e=None):
-        button_submit.disabled = len(onboard_counts) == 0
-        page.update()
+        button_submit.current.disabled = len(onboard_counts) == 0
+        button_submit.current.update()
 
-    # Funzione per calcolare il loot
     def submit(e=None):
         treasure_dict = {t.name: t for t in treasures}
         treasure_counts = {}
@@ -138,52 +153,42 @@ def main(page: ft.Page):
         min_gain *= multiplier
         max_gain *= multiplier
         result_text.current.value = f"Min Gain: {int(min_gain)} gold, Max Gain: {int(max_gain)} gold"
-        page.update()
+        result_text.current.update()
 
-    # Funzione per aggiungere preset
     def add_preset(e=None, multiplier=1):
         preset_name = preset_dropdown.current.value
         if not preset_name or preset_name not in PRESETS:
             return
         preset = PRESETS[preset_name]
-        # Add fixed treasures
         for name, qty in preset.get("fixed", []):
             treasures_found = get_treasure_by_name(name)
             for t in treasures_found:
-                if t.name in onboard_counts:
-                    onboard_counts[t.name] += qty * multiplier
-                else:
-                    onboard_counts[t.name] = qty * multiplier
-        # Add ranged treasures (min logic)
+                onboard_counts[t.name] = onboard_counts.get(t.name, 0) + qty * multiplier
         for name, min_qty, max_qty in preset.get("range", []):
             treasures_found = get_treasure_by_name(name)
+            min_qty = min_qty * multiplier
             if name == "Mermaid Gem":
                 for t in treasures_found:
                     if t.name == "Sapphire Mermaid Gem":
-                        if t.name in onboard_counts:
-                            onboard_counts[t.name] += min_qty * multiplier
-                        else:
-                            onboard_counts[t.name] = min_qty * multiplier
+                        onboard_counts[t.name] = onboard_counts.get(t.name, 0) + min_qty
             else:
                 for t in treasures_found:
-                    if t.name in onboard_counts:
-                        onboard_counts[t.name] += min_qty * multiplier
-                    else:
-                        onboard_counts[t.name] = min_qty * multiplier
+                    onboard_counts[t.name] = onboard_counts.get(t.name, 0) + min_qty
         update_onboard()
 
-    # Funzione per resettare gli onboard treasures
     def clear_onboard(e=None):
         onboard_counts.clear()
         update_onboard()
 
-    # --- UI ELEMENTS ---
-    text_search = TextField(label='Search', text_align=ft.TextAlign.LEFT, width=250, on_change=update_treasure_list)
-    button_submit = ElevatedButton(
-        text='Calculate', width=120, disabled=True, on_click=submit, expand=True
+    button_submit_ctrl = ElevatedButton(
+        ref=button_submit,
+        text='Calculate',
+        width=120,
+        disabled=True,
+        on_click=submit,
+        expand=True
     )
 
-    # Preset dropdown
     preset_dropdown_ctrl = Dropdown(
         ref=preset_dropdown,
         label="Presets",
@@ -198,7 +203,6 @@ def main(page: ft.Page):
         text="Clear Onboard", width=120, on_click=clear_onboard, bgcolor=ft.Colors.RED_400, color=ft.Colors.WHITE, expand=True
     )
 
-    # Emissary dropdown
     emissary_dropdown = Dropdown(
         ref=selected_emissary,
         label="Emissary",
@@ -208,7 +212,6 @@ def main(page: ft.Page):
         on_change=validate
     )
 
-    # Emissary level slider
     level_slider = Slider(
         ref=selected_level,
         min=1,
@@ -220,33 +223,11 @@ def main(page: ft.Page):
         on_change=validate
     )
 
-    # Event checkboxes
     gold_rush_checkbox = Checkbox(ref=gold_rush, label="Gold Rush x1.5", value=False, on_change=submit)
     gold_and_glory_checkbox = Checkbox(ref=gold_and_glory, label="Gold & Glory x2", value=False, on_change=submit)
 
-    # Colonna tesori filtrabili
-    treasures_col = Column(
-        [],
-        width=270,
-        height=200,
-        scroll="auto"
-    )
-
-    # Colonna tesori aggiunti
-    onboard = Column(
-        [],
-        width=270,
-        height=200,
-        scroll="auto"
-    )
-
-    # Risultato
     result = Text(ref=result_text, value="", size=16, weight="bold")
 
-    # Inizializza lista tesori
-    update_treasure_list()
-
-    # Layout
     page.add(
         Row(
             controls=[
@@ -269,7 +250,7 @@ def main(page: ft.Page):
                         Text("Onboard Treasures:"),
                         onboard,
                         Row([
-                            button_submit,
+                            button_submit_ctrl,
                             button_clear_onboard
                         ], expand=True),
                         result
@@ -280,6 +261,12 @@ def main(page: ft.Page):
             alignment=ft.MainAxisAlignment.START
         )
     )
+
+    # Collega la funzione on_change alla barra di ricerca
+    text_search.on_submit = on_search_change
+
+    # Inizializza la lista tesori
+    update_treasure_list()
 
 if __name__ == '__main__':
     ft.app(target=main)

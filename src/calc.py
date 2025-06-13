@@ -30,16 +30,16 @@ treasures = [
     Treasure(3, "Captain's Chest", 560, 1100, ["Gold Hoarders"]),
 
     # CORAL
-    Treasure(4, "Castaway's Chest", 105, 228, ["Gold Hoarders"]),
-    Treasure(5, "Seafarer's Chest", 245, 455, ["Gold Hoarders"]),
-    Treasure(6, "Marauder's Chest", 490, 910, ["Gold Hoarders"]),
-    Treasure(7, "Captain's Chest", 980, 1925, ["Gold Hoarders"]),
+    Treasure(4, "Coral Castaway's Chest", 105, 228, ["Gold Hoarders"]),
+    Treasure(5, "Coral Seafarer's Chest", 245, 455, ["Gold Hoarders"]),
+    Treasure(6, "Coral Marauder's Chest", 490, 910, ["Gold Hoarders"]),
+    Treasure(7, "Coral Captain's Chest", 980, 1925, ["Gold Hoarders"]),
 
     # ASHEN
-    Treasure(8, "Castaway's Chest", 140, 260, ["Gold Hoarders"]),
-    Treasure(9, "Seafarer's Chest", 280, 520, ["Gold Hoarders"]),
-    Treasure(10, "Marauder's Chest", 560, 1100, ["Gold Hoarders"]),
-    Treasure(11, "Captain's Chest", 1100, 2100, ["Gold Hoarders"]),
+    Treasure(8, "Ashen Castaway's Chest", 140, 260, ["Gold Hoarders"]),
+    Treasure(9, "Ashen Seafarer's Chest", 280, 520, ["Gold Hoarders"]),
+    Treasure(10, "Ashen Marauder's Chest", 560, 1100, ["Gold Hoarders"]),
+    Treasure(11, "Ashen Captain's Chest", 1100, 2100, ["Gold Hoarders"]),
 
     # SPECIAL
     Treasure(12, "Chest of Ancient Tributes", 3400, 3900, ["Gold Hoarders"]),
@@ -169,27 +169,28 @@ treasures = [
     Treasure(88, "Reaper's Chest", 10000, 25000, ["Reaper's Bones"]),
     Treasure(89, "Reaper's Bounty", 25000, 25000, ["Reaper's Bones"]),
     Treasure(90, "Cannon of Rage", 250, 250, ["Reaper's Bones"]),
+    Treasure(91, "Orb of Secrets", 20000, 20000, ["Gold Hoarders", "Merchant Alliance", "Order of Souls", "Hunter's Call", "Reaper's Bones"]),
 
     # MERMAID GEMS (VALGONO PER TUTTE LE FAZIONI PRINCIPALI)
-    Treasure(91, "Sapphire Mermaid Gem", 1000, 1000, ["Gold Hoarders", "Merchant Alliance", "Order of Souls", "Hunter's Call"]),
-    Treasure(92, "Emerald Mermaid Gem", 1000, 1000, ["Gold Hoarders", "Merchant Alliance", "Order of Souls", "Hunter's Call"]),
-    Treasure(93, "Ruby Mermaid Gem", 1000, 1000, ["Gold Hoarders", "Merchant Alliance", "Order of Souls", "Hunter's Call"]),
+    Treasure(92, "Sapphire Mermaid Gem", 1000, 1000, ["Gold Hoarders", "Merchant Alliance", "Order of Souls", "Hunter's Call"]),
+    Treasure(93, "Emerald Mermaid Gem", 1000, 1000, ["Gold Hoarders", "Merchant Alliance", "Order of Souls", "Hunter's Call"]),
+    Treasure(94, "Ruby Mermaid Gem", 1000, 1000, ["Gold Hoarders", "Merchant Alliance", "Order of Souls", "Hunter's Call"]),
 
     # REAPER'S BONES - FLAGS (valore base, emissary value ignorato)
-    Treasure(94, "Broken Emissary Flag Grade X (Yours)", 1, 1, ["Reaper's Bones"]),
-    Treasure(95, "Broken Emissary Flag (Grade I)", 1600, 2300, ["Reaper's Bones"]),
-    Treasure(96, "Broken Emissary Flag (Grade II)", 3500, 4900, ["Reaper's Bones"]),
-    Treasure(97, "Broken Emissary Flag (Grade III)", 5500, 6500, ["Reaper's Bones"]),
-    Treasure(98, "Broken Emissary Flag (Grade IV)", 7600, 8500, ["Reaper's Bones"]),
-    Treasure(99, "Broken Emissary Flag (Grade V)", 9500, 10500, ["Reaper's Bones"]),
+    Treasure(95, "Broken Emissary Flag Grade X (Yours)", 1, 1, ["Reaper's Bones"]),
+    Treasure(96, "Broken Emissary Flag (Grade I)", 1600, 2300, ["Reaper's Bones"]),
+    Treasure(97, "Broken Emissary Flag (Grade II)", 3500, 4900, ["Reaper's Bones"]),
+    Treasure(98, "Broken Emissary Flag (Grade III)", 5500, 6500, ["Reaper's Bones"]),
+    Treasure(99, "Broken Emissary Flag (Grade IV)", 7600, 8500, ["Reaper's Bones"]),
+    Treasure(100, "Broken Emissary Flag (Grade V)", 9500, 10500, ["Reaper's Bones"]),
 
     # REAPER'S BONES - NUOVE CASSE E OGGETTI MISSIONE
-    Treasure(100, "Casket of Gilded Bones", 5500, 6000, ["Reaper's Bones"]),
-    Treasure(101, "Casket of Shadowed Bones", 5000, 5500, ["Reaper's Bones"]),
-    Treasure(102, "Casket of Verdant Bones", 4500, 5000, ["Reaper's Bones"]),
-    Treasure(103, "Casket of Mottled Bones", 4000, 4500, ["Reaper's Bones"]),
-    Treasure(104, "Reaper Master's Urn", 5500, 6000, ["Reaper's Bones"]),
-    Treasure(105, "Skull of the Banished", 12500, 12500, ["Reaper's Bones"]),
+    Treasure(101, "Casket of Gilded Bones", 5500, 6000, ["Reaper's Bones"]),
+    Treasure(102, "Casket of Shadowed Bones", 5000, 5500, ["Reaper's Bones"]),
+    Treasure(103, "Casket of Verdant Bones", 4500, 5000, ["Reaper's Bones"]),
+    Treasure(104, "Casket of Mottled Bones", 4000, 4500, ["Reaper's Bones"]),
+    Treasure(105, "Reaper Master's Urn", 5500, 6000, ["Reaper's Bones"]),
+    Treasure(106, "Skull of the Banished", 12500, 12500, ["Reaper's Bones"]),
 ]
 
 def calculate_loot(treasure_counts, selected_emissary, emissary_level):
